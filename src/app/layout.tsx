@@ -1,3 +1,4 @@
+import Navbar from '@/components/Navbar';
 import './globals.css';
 
 export const metadata = {
@@ -8,7 +9,10 @@ export const metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang='en'>
-      <body className='bg-slate-800 text-slate-200'>{children}</body>
+      <body className='flex min-h-screen flex-col bg-slate-800 text-slate-200'>
+        <Navbar />
+        <main className='flex w-full grow flex-col items-center p-2'>{children}</main>
+      </body>
     </html>
   );
 }
