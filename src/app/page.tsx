@@ -1,27 +1,15 @@
+import { db } from '@/db/db'
+import { folder, note } from '@/db/schema'
 import FolderLink from '@/components/FolderLink';
 import NoteLink from '@/components/NoteLink';
 import { HomeIcon, DocumentPlusIcon, FolderPlusIcon } from '@heroicons/react/24/outline';
-import { setTimeout } from 'timers/promises';
 
-const getFolderData = async () => {
-  const generateFolder = () => ({
-    id: crypto.randomUUID(),
-    name: crypto.randomUUID(),
-    parentFolderId: crypto.randomUUID(),
-    createdAt: new Date(),
-  });
-  await setTimeout(5000);
-  return [generateFolder(), generateFolder(), generateFolder()];
+const getFolderData = () => {
+  return db.select().from(folder);
 };
 
-const getNotesData = async () => {
-  const generateNote = () => ({
-    id: crypto.randomUUID(),
-    name: crypto.randomUUID(),
-    parentFolderId: crypto.randomUUID(),
-    createdAt: new Date(),
-  });
-  return [generateNote(), generateNote(), generateNote()];
+const getNotesData = () => {
+  return db.select().from(note);
 };
 
 export default async function Home() {
@@ -48,16 +36,16 @@ export default async function Home() {
       <div className='flex w-full flex-col gap-2'>
         <div className='flex w-full flex-col gap-2'>
           {folderData
-            // .filter((folder) => !folder.parentFolderId)
-            .sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime())
+            .filter((folder) => !folder.parentFolderId)
+            .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
             .map((folder) => (
               <FolderLink key={folder.id} folder={folder} selectedItemId={folder.id} />
             ))}
         </div>
         <div className='flex w-full flex-col gap-2'>
           {notesData
-            // .filter((note) => !note.parentFolderId)
-            .sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime())
+            .filter((note) => !note.parentFolderId)
+            .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
             .map((note) => (
               <NoteLink key={note.id} note={note} selectedItemId={note.id} />
             ))}

@@ -1,15 +1,10 @@
 import React from 'react';
-import { FolderIcon } from '@heroicons/react/24/outline';
 import Link from 'next/link';
+import type { Folder } from '@/db/schema'
+import { FolderIcon } from '@heroicons/react/24/outline';
 
 interface FolderLinkProps {
-  // folder: Folder;
-  folder: {
-    id: string;
-    name: string;
-    parentFolderId: string;
-    createdAt: Date;
-  };
+  folder: Folder;
   selectedItemId: string | null;
 }
 

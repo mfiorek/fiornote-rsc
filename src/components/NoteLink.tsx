@@ -1,15 +1,10 @@
 import React from 'react';
 import Link from 'next/link';
+import type { Note } from '@/db/schema'
 import { DocumentIcon } from '@heroicons/react/24/outline';
 
 interface NoteLinkProps {
-  // note: Note;
-  note: {
-    id: string;
-    name: string;
-    parentFolderId: string;
-    createdAt: Date;
-  };
+  note: Note;
   selectedItemId: string | null;
 }
 
