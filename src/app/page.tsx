@@ -1,20 +1,10 @@
 import { redirect } from "next/navigation";
 import { getServerSession } from "next-auth";
-import { eq } from "drizzle-orm";
-import { db } from "@/db/db";
-import { folder, note } from "@/db/schema";
+import dbHandlers from "@/db/handlers";
 import { authOptions } from "@/lib/auth";
 import FolderLink from "@/components/FolderLink";
 import NoteLink from "@/components/NoteLink";
 import { HomeIcon, DocumentPlusIcon, FolderPlusIcon } from "@heroicons/react/24/outline";
-
-const getFolderData = (userId: string) => {
-  return db.select().from(folder).where(eq(folder.userId, userId));
-};
-
-const getNotesData = (userId: string) => {
-  return db.select().from(note).where(eq(note.userId, userId));
-};
 
 export default async function Home() {
   const session = await getServerSession(authOptions);
@@ -22,8 +12,8 @@ export default async function Home() {
     // TODO implement custom login page
     redirect("/api/auth/signin");
   }
-  const folderData = await getFolderData(session.user.id);
-  const notesData = await getNotesData(session.user.id);
+  const foldersData = await dbHandlers.folder.getAll(session.user.id);
+  const notesData = await dbHandlers.note.getAll(session.user.id);
 
   return (
     <div className="mx-auto flex w-full flex-col gap-2 lg:max-w-5xl">
@@ -44,7 +34,7 @@ export default async function Home() {
       <span className="h-px bg-slate-600" />
       <div className="flex w-full flex-col gap-2">
         <div className="flex w-full flex-col gap-2">
-          {folderData
+          {foldersData
             .filter((folder) => !folder.parentFolderId)
             .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
             .map((folder) => (

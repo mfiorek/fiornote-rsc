@@ -11,8 +11,7 @@ interface FolderLinkProps {
 const FolderLink: React.FC<FolderLinkProps> = ({ folder, selectedItemId }) => {
   return (
     <Link
-      href={`/${folder.parentFolderId || 'home'}?selectedItemId=${selectedItemId}`}
-      as={`/${folder.parentFolderId || 'home'}`}
+      href={`/${selectedItemId}`}
       className='flex w-full gap-2 rounded border border-sky-600 bg-slate-700 p-3'
     >
       <div className='flex w-full items-center justify-between'>
