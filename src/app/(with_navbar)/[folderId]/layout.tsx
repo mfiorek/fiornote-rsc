@@ -6,16 +6,10 @@ import dbHandlers from '@/db/handlers';
 import ContentLink from '@/components/ContentLink';
 import { ChevronLeftIcon, DocumentPlusIcon, FolderOpenIcon, FolderPlusIcon, HomeIcon } from '@heroicons/react/24/outline';
 
-export const metadata = {
-  title: 'fiornote',
-  description: 'fiornote - Notes app using React Server Components',
-};
-
 export default async function Layout({ children, params }: { children: React.ReactNode; params: { folderId: string } }) {
   const session = await getServerSession(authOptions);
   if (!session || !session.user) {
-    // TODO implement custom login page
-    redirect('/api/auth/signin');
+    redirect('/login');
   }
   const foldersData = await dbHandlers.folder.getAll(session.user.id);
   const notesData = await dbHandlers.note.getAll(session.user.id);
@@ -63,7 +57,6 @@ export default async function Layout({ children, params }: { children: React.Rea
               <ContentLink key={note.id} href={`/${params.folderId}/note/${note.id}`} text={note.name} variant='note' />
             ))}
         </div>
-        <h1>Rendered at: {new Date().toLocaleTimeString()}</h1>
       </div>
 
       {/* DIVIDER */}

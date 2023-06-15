@@ -9,8 +9,7 @@ import { ChevronLeftIcon, DocumentIcon, PencilSquareIcon } from '@heroicons/reac
 export default async function NotePage({ params }: { params: { folderId: string; itemId: string } }) {
   const session = await getServerSession(authOptions);
   if (!session || !session.user) {
-    // TODO implement custom login page
-    redirect('/api/auth/signin');
+    redirect('/login');
   }
   const foldersData = await dbHandlers.folder.getAll(session.user.id);
   const notesData = await dbHandlers.note.getAll(session.user.id);

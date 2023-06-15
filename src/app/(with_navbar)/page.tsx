@@ -8,8 +8,7 @@ import { HomeIcon, DocumentPlusIcon, FolderPlusIcon } from '@heroicons/react/24/
 export default async function Home() {
   const session = await getServerSession(authOptions);
   if (!session || !session.user) {
-    // TODO implement custom login page
-    redirect('/api/auth/signin');
+    redirect('/login');
   }
   const foldersData = await dbHandlers.folder.getAll(session.user.id);
   const notesData = await dbHandlers.note.getAll(session.user.id);
