@@ -1,10 +1,13 @@
-import type { NextAuthOptions } from "next-auth";
-import GitHubProvider from "next-auth/providers/github";
+import type { NextAuthOptions } from 'next-auth';
+import GitHubProvider from 'next-auth/providers/github';
 import { env } from '../env/server.mjs';
 
 export const authOptions: NextAuthOptions = {
+  pages: {
+    signIn: '/login',
+  },
   session: {
-    strategy: "jwt",
+    strategy: 'jwt',
   },
   providers: [
     GitHubProvider({
