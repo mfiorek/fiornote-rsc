@@ -12,5 +12,5 @@ export default async function Home() {
   const foldersData = await dbHandlers.folder.getAll(session.user.id);
   const notesData = await dbHandlers.note.getAll(session.user.id);
 
-  return <PageContent foldersData={foldersData} notesData={notesData} />;
+  return <PageContent foldersData={foldersData} notesData={notesData} userId={session.user.id} />;
 }
