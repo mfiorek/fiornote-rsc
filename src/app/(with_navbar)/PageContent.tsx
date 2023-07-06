@@ -160,12 +160,11 @@ const PageContent: React.FC<PageContentProps> = ({ foldersData, notesData, userI
           const dividerClass = index !== 0 && index !== indicesShown[0] && indicesShown.includes(index) ? 'border-l border-slate-600' : 'border-transparent';
           return (
             <section
+              key={content?.id}
               className={`flex basis-0 overflow-hidden transition-all duration-300 ${dividerClass}`}
               style={{ flexGrow: lastIndexShownCopy === index ? 2 : indicesShown.includes(index) ? 1 : 0 }}
             >
-              <div key={content?.id} className='flex w-full flex-col gap-2 px-2'>
-                {content && (isNote(content) ? <NoteColumn note={content} /> : <FolderColumn folder={content} />)}
-              </div>
+              <div className='flex w-full flex-col gap-2 px-2'>{content && (isNote(content) ? <NoteColumn note={content} /> : <FolderColumn folder={content} />)}</div>
             </section>
           );
         })}
