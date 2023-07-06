@@ -13,19 +13,17 @@ type PageContentProps = {
 };
 
 const PageContent: React.FC<PageContentProps> = ({ foldersData, notesData, userId }) => {
-  const [contentList, setContentList] = useState<(Folder | Note)[]>([
+  const [contentList, setContentList] = useState<(Folder | Note | null)[]>([
     { id: null as unknown as string, createdAt: new Date().toUTCString(), updatedAt: new Date().toUTCString(), name: 'Home', parentFolderId: null, userId: userId },
   ]);
   const [numberOfColumns, setNumberOfColumns] = useState(2);
   const [lastIndexShown, setLastIndexShown] = useState(0);
-  const indicesShown = [...Array(numberOfColumns).keys()].map((i) => i + lastIndexShown - numberOfColumns + 1);
-
-  const stubContent = { id: 'stub', createdAt: new Date().toUTCString(), updatedAt: new Date().toUTCString(), name: '', parentFolderId: null, userId: userId };
+  const [lastIndexShownCopy, setLastIndexShownCopy] = useState(0);
+  const indicesShown = [...Array(numberOfColumns).keys()].map((i) => i + lastIndexShownCopy - numberOfColumns + 1);
 
   useEffect(() => {
-    const firstStubIndex = contentList.findIndex((content) => content.id === 'stub');
-    setLastIndexShown(firstStubIndex !== -1 ? firstStubIndex - 1 : contentList.length - 1);
-  }, [numberOfColumns, contentList]);
+    setLastIndexShownCopy(lastIndexShown);
+  }, [lastIndexShown]);
 
   function isNote(item: Folder | Note): item is Note {
     return (item as Note).text !== undefined;
@@ -34,41 +32,41 @@ const PageContent: React.FC<PageContentProps> = ({ foldersData, notesData, userI
   function addToContentList(content: Folder | Note) {
     const newContentList = [...contentList];
 
-    const firstStubIndex = newContentList.findIndex((content) => content.id === 'stub');
-    if (firstStubIndex > -1) {
-      newContentList.splice(firstStubIndex);
-    }
-
-    const existingElementIndex = newContentList.findIndex((el) => el.id === content.id);
+    const existingElementIndex = newContentList.findIndex((el) => el !== null && el.id === content.id);
     if (existingElementIndex > -1) {
-      newContentList.fill(stubContent, existingElementIndex);
+      newContentList.fill(null, existingElementIndex);
       setContentList(newContentList);
+      setLastIndexShown(existingElementIndex);
       return;
     }
 
-    const existingParentElementIndex = newContentList.findIndex((el) => el.id !== null && el.parentFolderId === content.parentFolderId);
+    const existingParentElementIndex = newContentList.findIndex((el) => el !== null && el.id !== null && el.parentFolderId === content.parentFolderId);
     if (existingParentElementIndex > -1) {
       newContentList[existingParentElementIndex] = content;
-      newContentList.fill(stubContent, existingParentElementIndex + 1);
+      newContentList.fill(null, existingParentElementIndex + 1);
       setContentList(newContentList);
+      setLastIndexShown(existingParentElementIndex);
       return;
+    }
+
+    const firstNullIndex = newContentList.findIndex((el) => el === null);
+    if (firstNullIndex > -1) {
+      newContentList.splice(firstNullIndex);
     }
 
     newContentList.push(content);
     setContentList(newContentList);
+    setLastIndexShown(newContentList.length - 1);
     return;
   }
 
-  function removeFromContentList() {
+  function removeFromContentList(content: Folder | Note) {
     const newContentList = [...contentList];
 
-    const firstStubIndex = newContentList.findIndex((content) => content.id === 'stub');
-    if (firstStubIndex > -1) {
-      newContentList.splice(firstStubIndex);
-    }
-
-    newContentList.fill(stubContent, lastIndexShown);
+    const clickedIndex = newContentList.findIndex((el) => el === content);
+    newContentList.fill(null, clickedIndex);
     setContentList(newContentList);
+    setLastIndexShown(clickedIndex - 1);
   }
 
   const FolderColumn = ({ folder }: { folder: Folder }) => {
@@ -81,7 +79,7 @@ const PageContent: React.FC<PageContentProps> = ({ foldersData, notesData, userI
               <HomeIcon className='h-6 w-6' />
             ) : (
               <>
-                <button className='rounded bg-slate-700 p-2' onClick={() => removeFromContentList()}>
+                <button className='rounded bg-slate-700 p-2' onClick={() => removeFromContentList(folder)}>
                   <ChevronLeftIcon className='h-6 w-6' />
                 </button>
                 <FolderOpenIcon className='h-6 w-6' />
@@ -111,7 +109,7 @@ const PageContent: React.FC<PageContentProps> = ({ foldersData, notesData, userI
                 onClick={() => addToContentList(folder)}
                 text={folder.name}
                 variant='folder'
-                isSelected={contentList.some((el) => el.id === folder.id)}
+                isSelected={contentList.some((el) => el !== null && el.id === folder.id)}
               />
             ))}
         </div>
@@ -120,20 +118,25 @@ const PageContent: React.FC<PageContentProps> = ({ foldersData, notesData, userI
             .filter((el) => el.parentFolderId === folder.id)
             .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
             .map((note) => (
-              <ContentButton key={note.id} onClick={() => addToContentList(note)} text={note.name} variant='note' isSelected={contentList.some((el) => el.id === note.id)} />
+              <ContentButton
+                key={note.id}
+                onClick={() => addToContentList(note)}
+                text={note.name}
+                variant='note'
+                isSelected={contentList.some((el) => el !== null && el.id === note.id)}
+              />
             ))}
         </div>
       </div>
     );
   };
-
   const NoteColumn = ({ note }: { note: Note }) => {
     return (
       <>
         {/* NAV */}
         <div className='flex items-center justify-between gap-2'>
           <div className='flex items-center gap-2'>
-            <button className='block rounded bg-slate-700 p-2' onClick={() => removeFromContentList()}>
+            <button className='block rounded bg-slate-700 p-2' onClick={() => removeFromContentList(note)}>
               <ChevronLeftIcon className='h-6 w-6' />
             </button>
             <DocumentIcon className='h-6 w-6' />
@@ -159,10 +162,10 @@ const PageContent: React.FC<PageContentProps> = ({ foldersData, notesData, userI
           return (
             <section
               className={`flex basis-0 overflow-hidden transition-all duration-300 ${dividerClass}`}
-              style={{ flexGrow: lastIndexShown === index ? 2 : indicesShown.includes(index) ? 1 : 0 }}
+              style={{ flexGrow: lastIndexShownCopy === index ? 2 : indicesShown.includes(index) ? 1 : 0 }}
             >
-              <div key={content.id} className='flex w-full flex-col gap-2 px-2'>
-                {isNote(content) ? <NoteColumn note={content} /> : <FolderColumn folder={content} />}
+              <div key={content?.id} className='flex w-full flex-col gap-2 px-2'>
+                {content && (isNote(content) ? <NoteColumn note={content} /> : <FolderColumn folder={content} />)}
               </div>
             </section>
           );
