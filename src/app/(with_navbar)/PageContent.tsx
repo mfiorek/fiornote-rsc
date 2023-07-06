@@ -20,6 +20,7 @@ const PageContent: React.FC<PageContentProps> = ({ foldersData, notesData, userI
   const [lastIndexShown, setLastIndexShown] = useState(0);
   const [lastIndexShownCopy, setLastIndexShownCopy] = useState(0);
   const indicesShown = [...Array(numberOfColumns).keys()].map((i) => i + lastIndexShownCopy - numberOfColumns + 1);
+  const contentShown = contentList.filter((el, index) => indicesShown.includes(index));
 
   useEffect(() => {
     setLastIndexShownCopy(lastIndexShown);
@@ -34,8 +35,10 @@ const PageContent: React.FC<PageContentProps> = ({ foldersData, notesData, userI
 
     const existingElementIndex = newContentList.findIndex((el) => el !== null && el.id === content.id);
     if (existingElementIndex > -1) {
-      newContentList.fill(null, existingElementIndex);
-      setContentList(newContentList);
+      if (indicesShown.includes(existingElementIndex)) {
+        newContentList.fill(null, existingElementIndex);
+        setContentList(newContentList);
+      }
       setLastIndexShown(existingElementIndex);
       return;
     }
@@ -61,11 +64,7 @@ const PageContent: React.FC<PageContentProps> = ({ foldersData, notesData, userI
   }
 
   function removeFromContentList(content: Folder | Note) {
-    const newContentList = [...contentList];
-
-    const clickedIndex = newContentList.findIndex((el) => el === content);
-    newContentList.fill(null, clickedIndex);
-    setContentList(newContentList);
+    const clickedIndex = contentList.findIndex((el) => el === content);
     setLastIndexShown(clickedIndex - 1);
   }
 
@@ -109,7 +108,7 @@ const PageContent: React.FC<PageContentProps> = ({ foldersData, notesData, userI
                 onClick={() => addToContentList(folder)}
                 text={folder.name}
                 variant='folder'
-                isSelected={contentList.some((el) => el !== null && el.id === folder.id)}
+                isSelected={contentShown.some((el) => el !== null && el.id === folder.id)}
               />
             ))}
         </div>
@@ -123,7 +122,7 @@ const PageContent: React.FC<PageContentProps> = ({ foldersData, notesData, userI
                 onClick={() => addToContentList(note)}
                 text={note.name}
                 variant='note'
-                isSelected={contentList.some((el) => el !== null && el.id === note.id)}
+                isSelected={contentShown.some((el) => el !== null && el.id === note.id)}
               />
             ))}
         </div>
