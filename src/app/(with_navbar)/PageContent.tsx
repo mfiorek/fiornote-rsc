@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useDeferredValue, useState } from 'react';
 import { ReactMarkdown } from 'react-markdown/lib/react-markdown';
 import type { Folder, Note } from '@/db/schema';
 import ContentButton from '@/components/ContentButton';
@@ -16,15 +16,11 @@ const PageContent: React.FC<PageContentProps> = ({ foldersData, notesData, userI
   const [contentList, setContentList] = useState<(Folder | Note | null)[]>([
     { id: null as unknown as string, createdAt: new Date().toUTCString(), updatedAt: new Date().toUTCString(), name: 'Home', parentFolderId: null, userId: userId },
   ]);
-  const [numberOfColumns, setNumberOfColumns] = useState(2);
+  const [numberOfColumns, setNumberOfColumns] = useState(3);
   const [lastIndexShown, setLastIndexShown] = useState(0);
-  const [lastIndexShownCopy, setLastIndexShownCopy] = useState(0);
-  const indicesShown = [...Array(numberOfColumns).keys()].map((i) => i + lastIndexShownCopy - numberOfColumns + 1);
+  const deferredLastIndexShown = useDeferredValue(lastIndexShown);
+  const indicesShown = [...Array(numberOfColumns).keys()].map((i) => i + deferredLastIndexShown - numberOfColumns + 1);
   const contentShown = contentList.filter((el, index) => indicesShown.includes(index));
-
-  useEffect(() => {
-    setLastIndexShownCopy(lastIndexShown);
-  }, [lastIndexShown]);
 
   function isNote(item: Folder | Note): item is Note {
     return (item as Note).text !== undefined;
@@ -162,7 +158,7 @@ const PageContent: React.FC<PageContentProps> = ({ foldersData, notesData, userI
             <section
               key={content?.id}
               className={`flex basis-0 overflow-hidden transition-all duration-300 ${dividerClass}`}
-              style={{ flexGrow: lastIndexShownCopy === index ? 2 : indicesShown.includes(index) ? 1 : 0 }}
+              style={{ flexGrow: deferredLastIndexShown === index ? 2 : indicesShown.includes(index) ? 1 : 0 }}
             >
               <div className='flex w-full flex-col gap-2 px-2'>{content && (isNote(content) ? <NoteColumn note={content} /> : <FolderColumn folder={content} />)}</div>
             </section>
