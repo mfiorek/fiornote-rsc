@@ -1,30 +1,48 @@
-import { pgTable, foreignKey, text, timestamp, uniqueIndex, integer } from 'drizzle-orm/pg-core';
-import { InferModel } from 'drizzle-orm';
+import {
+  pgTable,
+  foreignKey,
+  text,
+  timestamp,
+  integer,
+  primaryKey,
+} from "drizzle-orm/pg-core";
+import { InferSelectModel } from "drizzle-orm";
+import type { AdapterAccount } from "@auth/core/adapters";
 
-export const note = pgTable('Note', {
-  id: text('id').primaryKey().notNull(),
-  createdAt: timestamp('createdAt', { precision: 3, mode: 'string' }).defaultNow().notNull(),
-  updatedAt: timestamp('updatedAt', { precision: 3, mode: 'string' }).notNull(),
-  name: text('name').notNull(),
-  text: text('text').notNull(),
-  userId: text('userId')
+export const note = pgTable("Note", {
+  id: text("id").primaryKey().notNull(),
+  createdAt: timestamp("createdAt", { precision: 3, mode: "string" })
+    .defaultNow()
+    .notNull(),
+  updatedAt: timestamp("updatedAt", { precision: 3, mode: "string" }).notNull(),
+  name: text("name").notNull(),
+  text: text("text").notNull(),
+  userId: text("userId")
     .notNull()
-    .references(() => user.id, { onDelete: 'cascade', onUpdate: 'cascade' }),
-  parentFolderId: text('parentFolderId').references(() => folder.id, { onDelete: 'set null', onUpdate: 'cascade' }),
+    .references(() => users.id, { onDelete: "cascade", onUpdate: "cascade" }),
+  parentFolderId: text("parentFolderId").references(() => folder.id, {
+    onDelete: "set null",
+    onUpdate: "cascade",
+  }),
 });
-export type Note = InferModel<typeof note, "select">;
+export type Note = InferSelectModel<typeof note>;
 
 export const folder = pgTable(
-  'Folder',
+  "Folder",
   {
-    id: text('id').primaryKey().notNull(),
-    createdAt: timestamp('createdAt', { precision: 3, mode: 'string' }).defaultNow().notNull(),
-    updatedAt: timestamp('updatedAt', { precision: 3, mode: 'string' }).notNull(),
-    name: text('name').notNull(),
-    userId: text('userId')
+    id: text("id").primaryKey().notNull(),
+    createdAt: timestamp("createdAt", { precision: 3, mode: "string" })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp("updatedAt", {
+      precision: 3,
+      mode: "string",
+    }).notNull(),
+    name: text("name").notNull(),
+    userId: text("userId")
       .notNull()
-      .references(() => user.id, { onDelete: 'cascade', onUpdate: 'cascade' }),
-    parentFolderId: text('parentFolderId'),
+      .references(() => users.id, { onDelete: "cascade", onUpdate: "cascade" }),
+    parentFolderId: text("parentFolderId"),
   },
   (table) => {
     return {
@@ -32,82 +50,59 @@ export const folder = pgTable(
         columns: [table.parentFolderId],
         foreignColumns: [table.id],
       })
-        .onUpdate('cascade')
-        .onDelete('set null'),
+        .onUpdate("cascade")
+        .onDelete("set null"),
     };
-  },
+  }
 );
-export type Folder = InferModel<typeof folder, "select">;
+export type Folder = InferSelectModel<typeof folder>;
 
-export const user = pgTable(
-  'User',
-  {
-    id: text('id').primaryKey().notNull(),
-    name: text('name'),
-    email: text('email'),
-    emailVerified: timestamp('emailVerified', { precision: 3, mode: 'string' }),
-    image: text('image'),
-  },
-  (table) => {
-    return {
-      emailKey: uniqueIndex('User_email_key').on(table.email),
-    };
-  },
-);
+export const users = pgTable("user", {
+  id: text("id").notNull().primaryKey(),
+  name: text("name"),
+  email: text("email").notNull(),
+  emailVerified: timestamp("emailVerified", { mode: "date" }),
+  image: text("image"),
+});
 
-export const session = pgTable(
-  'Session',
+export const accounts = pgTable(
+  "account",
   {
-    id: text('id').primaryKey().notNull(),
-    sessionToken: text('sessionToken').notNull(),
-    userId: text('userId')
+    userId: text("userId")
       .notNull()
-      .references(() => user.id, { onDelete: 'cascade', onUpdate: 'cascade' }),
-    expires: timestamp('expires', { precision: 3, mode: 'string' }).notNull(),
+      .references(() => users.id, { onDelete: "cascade" }),
+    type: text("type").$type<AdapterAccount["type"]>().notNull(),
+    provider: text("provider").notNull(),
+    providerAccountId: text("providerAccountId").notNull(),
+    refresh_token: text("refresh_token"),
+    access_token: text("access_token"),
+    expires_at: integer("expires_at"),
+    token_type: text("token_type"),
+    scope: text("scope"),
+    id_token: text("id_token"),
+    session_state: text("session_state"),
   },
-  (table) => {
-    return {
-      sessionTokenKey: uniqueIndex('Session_sessionToken_key').on(table.sessionToken),
-    };
-  },
+  (account) => ({
+    compoundKey: primaryKey(account.provider, account.providerAccountId),
+  })
 );
 
-export const account = pgTable(
-  'Account',
-  {
-    id: text('id').primaryKey().notNull(),
-    userId: text('userId')
-      .notNull()
-      .references(() => user.id, { onDelete: 'cascade', onUpdate: 'cascade' }),
-    type: text('type').notNull(),
-    provider: text('provider').notNull(),
-    providerAccountId: text('providerAccountId').notNull(),
-    refreshToken: text('refresh_token'),
-    accessToken: text('access_token'),
-    expiresAt: integer('expires_at'),
-    tokenType: text('token_type'),
-    scope: text('scope'),
-    idToken: text('id_token'),
-    sessionState: text('session_state'),
-  },
-  (table) => {
-    return {
-      providerProviderAccountIdKey: uniqueIndex('Account_provider_providerAccountId_key').on(table.provider, table.providerAccountId),
-    };
-  },
-);
+export const sessions = pgTable("session", {
+  sessionToken: text("sessionToken").notNull().primaryKey(),
+  userId: text("userId")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  expires: timestamp("expires", { mode: "date" }).notNull(),
+});
 
-export const verificationToken = pgTable(
-  'VerificationToken',
+export const verificationTokens = pgTable(
+  "verificationToken",
   {
-    identifier: text('identifier').notNull(),
-    token: text('token').notNull(),
-    expires: timestamp('expires', { precision: 3, mode: 'string' }).notNull(),
+    identifier: text("identifier").notNull(),
+    token: text("token").notNull(),
+    expires: timestamp("expires", { mode: "date" }).notNull(),
   },
-  (table) => {
-    return {
-      identifierTokenKey: uniqueIndex('VerificationToken_identifier_token_key').on(table.identifier, table.token),
-      tokenKey: uniqueIndex('VerificationToken_token_key').on(table.token),
-    };
-  },
+  (vt) => ({
+    compoundKey: primaryKey(vt.identifier, vt.token),
+  })
 );

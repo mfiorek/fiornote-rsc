@@ -7,6 +7,7 @@ import PageContent from './PageContent';
 export default async function Home() {
   const session = await getServerSession(authOptions);
   if (!session || !session.user) {
+    // This is already done in middleware, but we need this for typesafety
     redirect('/login');
   }
   const foldersData = await dbHandlers.folder.getAll(session.user.id);
